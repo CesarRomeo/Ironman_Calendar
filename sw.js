@@ -1,10 +1,10 @@
 const CACHE_NAME = 'iron-cal-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/main.js',
-  '/manifest.json'
+  './',
+  'index.html',
+  'style.css',
+  'main.js',
+  'manifest.json'
 ];
 
 self.addEventListener('install', (e) => {
