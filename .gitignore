@@ -12,3 +12,8 @@ ironman-web/*.local
 .DS_Store
 Thumbs.db
 .env
+
+# IDEs & Tools
+.gemini/
+.vite/
+**/.vite/
