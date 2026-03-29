@@ -1,0 +1,14 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# React Project
+ironman-web/node_modules/
+ironman-web/dist/
+ironman-web/.env
+ironman-web/*.local
+
+# OS
+.DS_Store
+Thumbs.db
+.env
