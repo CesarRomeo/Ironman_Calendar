@@ -12,4 +12,4 @@ export interface TrainingPlan {
     [date: string]: Workout[];
 }
 
-export type View = 'calendar' | 'stats' | 'settings';
+export type View = 'calendar' | 'stats' | 'settings' | 'entrenos';
