@@ -1,9 +1,14 @@
-const CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
-const CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
-const REDIRECT_URI = import.meta.env.VITE_STRAVA_REDIRECT_URI;
-
 export const getStravaAuthUrl = () => {
-  return `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=activity:read_all`;
+  const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
+  const redirectUri = import.meta.env.VITE_STRAVA_REDIRECT_URI;
+  
+  console.log('Iniciando Auth Strava con Client ID:', clientId);
+  
+  if (!clientId || clientId === 'undefined') {
+    console.error('ERROR: VITE_STRAVA_CLIENT_ID no está definido en el archivo .env');
+  }
+
+  return `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=activity:read_all`;
 };
 
 export const exchangeToken = async (code: string) => {
@@ -11,8 +16,8 @@ export const exchangeToken = async (code: string) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
+      client_id: import.meta.env.VITE_STRAVA_CLIENT_ID,
+      client_secret: import.meta.env.VITE_STRAVA_CLIENT_SECRET,
       code,
       grant_type: 'authorization_code',
     }),
