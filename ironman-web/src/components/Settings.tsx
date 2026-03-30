@@ -1,6 +1,11 @@
 import React from 'react';
+import { getStravaAuthUrl } from '../services/strava.ts';
 
 const Settings: React.FC = () => {
+  const handleConnectStrava = () => {
+    window.location.href = getStravaAuthUrl();
+  };
+
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="user-profile flex items-center gap-8 p-10 bg-surface-container rounded-xl border border-outline-variant/10 shadow-xl">
@@ -57,10 +62,15 @@ const Settings: React.FC = () => {
             </div>
             <div className="flex justify-between items-center p-8 hover:bg-surface-container-high transition-colors">
               <div>
-                <span className="font-headline font-bold text-sm block">Garmin / Strava Sync</span>
+                <span className="font-headline font-bold text-sm block">Strava Connection</span>
                 <p className="text-[10px] font-body opacity-40 uppercase mt-1">Cloud performance data</p>
               </div>
-              <span className="font-label text-[10px] uppercase font-black text-primary cursor-pointer hover:bg-primary hover:text-on-primary border border-primary/30 px-4 py-2 rounded-full transition-all">Synchronized</span>
+              <button 
+                onClick={handleConnectStrava}
+                className="font-label text-[10px] uppercase font-black text-primary hover:bg-primary hover:text-on-primary border border-primary/30 px-4 py-2 rounded-full transition-all"
+              >
+                Connect Strava
+              </button>
             </div>
           </div>
         </div>
