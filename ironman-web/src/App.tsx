@@ -8,12 +8,20 @@ import Calendar from './components/Calendar.tsx';
 import Stats from './components/Stats.tsx';
 import Settings from './components/Settings.tsx';
 import TrainingDetails from './components/TrainingDetails.tsx';
+import StravaCallback from './components/StravaCallback.tsx';
+import Workouts from './components/Workouts.tsx';
 
 function App() {
   const [activeView, setActiveView] = React.useState<View>('calendar');
   const [trainingPlan, setTrainingPlan] = React.useState<TrainingPlan>({});
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
+
+  const isStravaCallback = window.location.pathname === '/strava-callback';
+
+  if (isStravaCallback) {
+    return <StravaCallback />;
+  }
 
   // Load plan
   React.useEffect(() => {
@@ -72,6 +80,15 @@ function App() {
             {activeView === 'stats' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(0,218,243,0.5)]"></div>}
             <span className="material-symbols-outlined" style={{ fontVariationSettings: activeView === 'stats' ? "'FILL' 1" : "" }}>leaderboard</span>
             <span className="font-label text-sm tracking-wide uppercase text-left font-bold">Statistics</span>
+          </button>
+
+          <button 
+             onClick={() => setActiveView('entrenos')}
+             className={`px-6 py-4 flex items-center gap-4 group transition-all relative ${activeView === 'entrenos' ? 'text-primary' : 'text-on-surface opacity-60 hover:opacity-100 hover:bg-surface-container hover:text-primary'}`}
+          >
+            {activeView === 'entrenos' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(0,218,243,0.5)]"></div>}
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: activeView === 'entrenos' ? "'FILL' 1" : "" }}>fitness_center</span>
+            <span className="font-label text-sm tracking-wide uppercase text-left font-bold">Entrenos</span>
           </button>
 
           <button 
@@ -251,6 +268,12 @@ function App() {
           {activeView === 'stats' && (
             <div className="animate-in fade-in duration-700">
                 <Stats trainingPlan={trainingPlan} currentMonth={currentMonth} />
+            </div>
+          )}
+
+          {activeView === 'entrenos' && (
+            <div className="animate-in fade-in duration-700">
+                <Workouts />
             </div>
           )}
 
