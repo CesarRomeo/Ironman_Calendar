@@ -17,3 +17,6 @@ Thumbs.db
 .gemini/
 .vite/
 **/.vite/
+.firebase/
+build_output.log
+ironman-web/tsc-errors.txt
