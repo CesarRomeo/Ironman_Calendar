@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getAthleteActivities } from '../services/strava.ts';
+import { getStravaActivities, saveStravaActivities } from '../services/firestore.ts';
 
 interface StravaActivity {
   id: number;
@@ -21,19 +22,36 @@ const Workouts: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 1. Cargar desde LocalStorage al iniciar (Clone persistente)
+  // 1. Cargar desde Firestore al iniciar (Con fallback a LocalStorage)
   useEffect(() => {
-    const savedEntrenos = localStorage.getItem('ironEntrenos');
-    if (savedEntrenos) {
-      setActivities(JSON.parse(savedEntrenos));
-    }
-    setLoading(false);
+    const loadActivities = async () => {
+      try {
+        const cloudActivities = await getStravaActivities();
+        if (cloudActivities && cloudActivities.length > 0) {
+          setActivities(cloudActivities);
+          localStorage.setItem('ironEntrenos', JSON.stringify(cloudActivities));
+        } else {
+          const savedEntrenos = localStorage.getItem('ironEntrenos');
+          if (savedEntrenos) {
+            setActivities(JSON.parse(savedEntrenos));
+          }
+        }
+      } catch (err) {
+        console.error("Error cargando actividades:", err);
+        const savedEntrenos = localStorage.getItem('ironEntrenos');
+        if (savedEntrenos) setActivities(JSON.parse(savedEntrenos));
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadActivities();
   }, []);
 
   // Función para sincronizar con Strava (Fusión inteligente)
   const handleSync = async () => {
-    const token = localStorage.getItem('strava_token');
-    if (!token) {
+    const refreshToken = localStorage.getItem('strava_refresh_token');
+    if (!refreshToken) {
       setError('Strava no conectado. Ve a Configuración para vincular tu cuenta.');
       return;
     }
@@ -42,9 +60,11 @@ const Workouts: React.FC = () => {
     setError(null);
 
     try {
-      const newData = await getAthleteActivities(token);
+      const newData = await getAthleteActivities();
       
       if (Array.isArray(newData)) {
+        let combinedResult: StravaActivity[] = [];
+        
         setActivities(prev => {
           // Obtener IDs de las actividades que ya tenemos clonadas
           const existingIds = new Set(prev.map(a => a.id));
@@ -56,10 +76,17 @@ const Workouts: React.FC = () => {
             new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
           );
 
-          // Guardar permanentemente el clon actualizado
+          combinedResult = combined;
+          // Guardar permanentemente el clon actualizado en LocalStorage
           localStorage.setItem('ironEntrenos', JSON.stringify(combined));
           return combined;
         });
+
+        // Guardar en Firestore para persistencia multi-dispositivo
+        if (combinedResult.length > 0) {
+          await saveStravaActivities(combinedResult);
+        }
+        
       } else {
         setError('Error al sincronizar con Strava. Intenta reconectar.');
       }
