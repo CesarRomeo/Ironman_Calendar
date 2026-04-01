@@ -1,7 +1,10 @@
 import React from 'react';
 import { getStravaAuthUrl } from '../services/strava.ts';
+import { useApp } from '../context/AppContext.tsx';
 
 const Settings: React.FC = () => {
+  const { user, login, logout, settings, updateSettings } = useApp();
+
   const handleConnectStrava = () => {
     window.location.href = getStravaAuthUrl();
   };
@@ -9,11 +12,32 @@ const Settings: React.FC = () => {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="user-profile flex items-center gap-8 p-10 bg-surface-container rounded-xl border border-outline-variant/10 shadow-xl">
-        <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/20 font-headline font-black text-3xl text-primary shadow-[0_0_20px_rgba(0,218,243,0.1)]">AL</div>
-        <div className="user-info">
-          <h3 className="font-headline font-black text-3xl tracking-tighter uppercase">Alex R.</h3>
+        {user?.photoURL ? (
+          <img src={user.photoURL} alt="Profile" className="w-20 h-20 rounded-full border-2 border-primary/20 shadow-[0_0_20px_rgba(0,218,243,0.1)]" />
+        ) : (
+          <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/20 font-headline font-black text-3xl text-primary shadow-[0_0_20px_rgba(0,218,243,0.1)]">
+            {user?.displayName?.substring(0, 2).toUpperCase() || 'AT'}
+          </div>
+        )}
+        <div className="user-info flex-1">
+          <h3 className="font-headline font-black text-3xl tracking-tighter uppercase">{user?.displayName || 'Atleta No Identificado'}</h3>
           <p className="font-label text-xs opacity-50 uppercase tracking-[0.2em] mt-1 text-primary">Pro Elite Performance Plan</p>
         </div>
+        {user ? (
+          <button 
+            onClick={logout}
+            className="px-6 py-2 bg-error-container/10 text-error border border-error/30 rounded-full font-label text-[10px] font-black uppercase tracking-widest hover:bg-error hover:text-on-error transition-all"
+          >
+            Sign Out
+          </button>
+        ) : (
+          <button 
+            onClick={login}
+            className="px-8 py-3 bg-primary text-on-primary rounded-full font-label text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20"
+          >
+            Sign In with Google
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -26,7 +50,12 @@ const Settings: React.FC = () => {
                 <p className="text-[10px] font-body opacity-40 uppercase mt-1">Real-time alerts & reminders</p>
               </div>
               <div className="relative inline-block w-12 h-6">
-                <input type="checkbox" defaultChecked className="peer opacity-0 w-0 h-0" />
+                <input 
+                  type="checkbox" 
+                  checked={settings.notifications}
+                  onChange={() => updateSettings({ notifications: !settings.notifications })}
+                  className="peer opacity-0 w-0 h-0" 
+                />
                 <span className="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-surface-container-highest transition-all duration-300 rounded-full peer-checked:bg-primary before:absolute before:h-4 before:w-4 before:left-1 before:bottom-1 before:bg-on-surface before:transition-all before:duration-300 before:rounded-full peer-checked:before:translate-x-6"></span>
               </div>
             </div>
@@ -36,7 +65,12 @@ const Settings: React.FC = () => {
                 <p className="text-[10px] font-body opacity-40 uppercase mt-1">High contrast performance UI</p>
               </div>
               <div className="relative inline-block w-12 h-6">
-                <input type="checkbox" defaultChecked className="peer opacity-0 w-0 h-0" />
+                <input 
+                  type="checkbox" 
+                  checked={settings.darkMode}
+                  onChange={() => updateSettings({ darkMode: !settings.darkMode })}
+                  className="peer opacity-0 w-0 h-0" 
+                />
                 <span className="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-surface-container-highest transition-all duration-300 rounded-full peer-checked:bg-primary before:absolute before:h-4 before:w-4 before:left-1 before:bottom-1 before:bg-on-surface before:transition-all before:duration-300 before:rounded-full peer-checked:before:translate-x-6"></span>
               </div>
             </div>
@@ -45,7 +79,20 @@ const Settings: React.FC = () => {
                 <span className="font-headline font-bold text-sm block">Measurement Units</span>
                 <p className="text-[10px] font-body opacity-40 uppercase mt-1">Global metric standards</p>
               </div>
-              <span className="font-label text-[10px] uppercase font-black text-primary bg-primary/10 px-3 py-1 rounded">Metric (KM)</span>
+              <div className="flex bg-surface-container-high rounded-lg p-1 border border-outline-variant/10">
+                <button 
+                  onClick={() => updateSettings({ units: 'metric' })}
+                  className={`px-3 py-1 rounded font-label text-[10px] font-black uppercase transition-all ${settings.units === 'metric' ? 'bg-primary text-on-primary shadow-lg' : 'opacity-40 hover:opacity-100'}`}
+                >
+                  KM
+                </button>
+                <button 
+                  onClick={() => updateSettings({ units: 'imperial' })}
+                  className={`px-3 py-1 rounded font-label text-[10px] font-black uppercase transition-all ${settings.units === 'imperial' ? 'bg-primary text-on-primary shadow-lg' : 'opacity-40 hover:opacity-100'}`}
+                >
+                  MI
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -77,7 +124,10 @@ const Settings: React.FC = () => {
       </div>
 
       <div className="pt-12 border-t border-outline-variant/20 flex justify-end">
-        <button className="px-10 py-5 bg-error-container/10 text-error border border-error/30 rounded-full font-label text-[10px] font-black uppercase tracking-[0.2em] hover:bg-error hover:text-on-error transition-all shadow-lg hover:shadow-error/20">
+        <button 
+          onClick={logout}
+          className="px-10 py-5 bg-error-container/10 text-error border border-error/30 rounded-full font-label text-[10px] font-black uppercase tracking-[0.2em] hover:bg-error hover:text-on-error transition-all shadow-lg hover:shadow-error/20"
+        >
           Terminate Session
         </button>
       </div>

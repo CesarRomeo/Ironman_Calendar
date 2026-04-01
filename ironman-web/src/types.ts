@@ -13,3 +13,9 @@ export interface TrainingPlan {
 }
 
 export type View = 'calendar' | 'stats' | 'settings' | 'entrenos';
+
+export interface UserSettings {
+    darkMode: boolean;
+    notifications: boolean;
+    units: 'metric' | 'imperial';
+}

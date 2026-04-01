@@ -1,6 +1,8 @@
 import React from 'react';
 import type { TrainingPlan, View, Workout } from './types.ts';
 import { generatePlan } from './utils/planGenerator.ts';
+import { getUserPlan, saveUserPlan } from './services/firestore.ts';
+import { useApp } from './context/AppContext.tsx';
 import './index.css';
 
 // Components
@@ -12,10 +14,12 @@ import StravaCallback from './components/StravaCallback.tsx';
 import Workouts from './components/Workouts.tsx';
 
 function App() {
+  const { user, loading: authLoading, login } = useApp();
   const [activeView, setActiveView] = React.useState<View>('calendar');
   const [trainingPlan, setTrainingPlan] = React.useState<TrainingPlan>({});
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
+  const [isCloudSyncing, setIsCloudSyncing] = React.useState(false);
 
   const isStravaCallback = window.location.pathname === '/strava-callback';
 
@@ -23,33 +27,62 @@ function App() {
     return <StravaCallback />;
   }
 
-  // Load plan
+  // Load plan from Firestore or generate it
   React.useEffect(() => {
-    const savedPlan = localStorage.getItem('ironPlan');
-    if (savedPlan) {
-      setTrainingPlan(JSON.parse(savedPlan));
-    } else {
-      const newPlan = generatePlan();
-      setTrainingPlan(newPlan);
-      localStorage.setItem('ironPlan', JSON.stringify(newPlan));
-    }
-  }, []);
+    if (authLoading) return;
 
-  // Save plan whenever it changes
-  React.useEffect(() => {
-    if (Object.keys(trainingPlan).length > 0) {
-      localStorage.setItem('ironPlan', JSON.stringify(trainingPlan));
-    }
-  }, [trainingPlan]);
+    const loadPlan = async () => {
+      setIsCloudSyncing(true);
+      const userId = user?.uid || "anonymous_user";
+      try {
+        const cloudPlan = await getUserPlan(userId);
+        if (cloudPlan && Object.keys(cloudPlan).length > 0) {
+          console.log('Plan cargado desde la nube para:', userId);
+          setTrainingPlan(cloudPlan);
+        } else {
+          // Si no hay en la nube, mirar en local o generar
+          const savedPlan = localStorage.getItem(`ironPlan_${userId}`);
+          if (savedPlan) {
+            const parsedLocal = JSON.parse(savedPlan);
+            setTrainingPlan(parsedLocal);
+            await saveUserPlan(parsedLocal, userId);
+          } else {
+            const newPlan = generatePlan();
+            setTrainingPlan(newPlan);
+            await saveUserPlan(newPlan, userId);
+            localStorage.setItem(`ironPlan_${userId}`, JSON.stringify(newPlan));
+          }
+        }
+      } catch (err) {
+        console.error('Error al sincronizar con la nube:', err);
+        const savedPlan = localStorage.getItem(`ironPlan_${userId}`);
+        if (savedPlan) setTrainingPlan(JSON.parse(savedPlan));
+      } finally {
+        setIsCloudSyncing(false);
+      }
+    };
+    
+    loadPlan();
+  }, [user, authLoading]);
 
-  const toggleWorkout = (date: string, workoutId: string) => {
-    setTrainingPlan(prev => {
-      const dayWorkouts = prev[date] || [];
-      const updatedWorkouts = dayWorkouts.map(w => 
-        w.id === workoutId ? { ...w, completed: !w.completed } : w
-      );
-      return { ...prev, [date]: updatedWorkouts };
-    });
+  const toggleWorkout = async (date: string, workoutId: string) => {
+    const dayWorkouts = trainingPlan[date] || [];
+    const updatedWorkouts = dayWorkouts.map(w => 
+      w.id === workoutId ? { ...w, completed: !w.completed } : w
+    );
+    
+    const newPlan = { ...trainingPlan, [date]: updatedWorkouts };
+    setTrainingPlan(newPlan);
+    
+    const userId = user?.uid || "anonymous_user";
+    
+    // Guardar en la nube y local
+    try {
+      localStorage.setItem(`ironPlan_${userId}`, JSON.stringify(newPlan));
+      await saveUserPlan(newPlan, userId);
+    } catch (err) {
+      console.error('Error guardando en la nube:', err);
+    }
   };
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -127,12 +160,32 @@ function App() {
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-tertiary rounded-full shadow-[0_0_8px_rgba(255,182,146,0.5)]"></span>
             </div>
             <span className="material-symbols-outlined text-on-surface opacity-70 hover:text-primary transition-opacity cursor-pointer">bolt</span>
+            
             <div className="flex items-center gap-4 pl-4 border-l border-outline-variant/20">
-              <div className="text-right">
-                <p className="text-xs font-black font-headline leading-tight uppercase tracking-tight">Alex R.</p>
-                <p className="text-[10px] font-label opacity-40 uppercase tracking-tighter">Pro Elite Athlete</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/20 font-headline font-black text-primary shadow-[0_0_15px_rgba(0,218,243,0.1)]">AL</div>
+              {authLoading ? (
+                <div className="w-10 h-10 rounded-full border-2 border-primary/20 animate-spin border-t-primary"></div>
+              ) : user ? (
+                <>
+                  <div className="text-right">
+                    <p className="text-xs font-black font-headline leading-tight uppercase tracking-tight">{user.displayName || 'Athlete'}</p>
+                    <p className="text-[10px] font-label opacity-40 uppercase tracking-tighter">Pro Elite Athlete</p>
+                  </div>
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="Profile" className="w-10 h-10 rounded-full border-2 border-primary/20 shadow-[0_0_15px_rgba(0,218,243,0.1)]" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/20 font-headline font-black text-primary">
+                      {user.displayName?.substring(0, 2).toUpperCase() || 'AT'}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <button 
+                  onClick={login}
+                  className="bg-surface-container hover:bg-surface-container-high px-4 py-2 rounded-full font-label text-[10px] font-black uppercase tracking-widest transition-all border border-outline-variant/10"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
           </div>
         </header>
