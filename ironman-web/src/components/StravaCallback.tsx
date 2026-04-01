@@ -11,6 +11,7 @@ const StravaCallback: React.FC = () => {
         .then(data => {
           localStorage.setItem('strava_token', data.access_token);
           localStorage.setItem('strava_refresh_token', data.refresh_token);
+          localStorage.setItem('strava_expires_at', data.expires_at.toString());
           window.location.href = '/';
         })
         .catch(err => {
