@@ -20,6 +20,7 @@ function App() {
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
   const [isCloudSyncing, setIsCloudSyncing] = React.useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   const isStravaCallback = window.location.pathname === '/strava-callback';
 
@@ -90,15 +91,31 @@ function App() {
 
   return (
     <div className="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen">
+      {/* Overlay for mobile sidebar */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[45] lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* SideNavBar */}
-      <aside className="fixed left-0 top-0 h-full w-64 border-r border-outline-variant/10 bg-surface flex flex-col py-8 z-50 shadow-2xl">
-        <div className="px-6 mb-12">
-          <h1 className="text-2xl font-black tracking-tighter text-primary uppercase font-headline">The Kinetic Lab</h1>
-          <p className="font-label text-[10px] tracking-[0.2em] uppercase opacity-50 mt-1">Elite Performance</p>
+      <aside className={`fixed left-0 top-0 h-full w-64 border-r border-outline-variant/10 bg-surface flex flex-col py-8 z-50 shadow-2xl transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="px-6 mb-12 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-black tracking-tighter text-primary uppercase font-headline">The Kinetic Lab</h1>
+            <p className="font-label text-[10px] tracking-[0.2em] uppercase opacity-50 mt-1">Elite Performance</p>
+          </div>
+          <button 
+            className="lg:hidden p-2 text-on-surface/50 hover:text-primary transition-colors"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
         </div>
         <nav className="flex-1 flex flex-col gap-1">
           <button 
-            onClick={() => setActiveView('calendar')}
+            onClick={() => { setActiveView('calendar'); setIsSidebarOpen(false); }}
             className={`px-6 py-4 flex items-center gap-4 group transition-all relative ${activeView === 'calendar' ? 'text-primary' : 'text-on-surface opacity-60 hover:opacity-100 hover:bg-surface-container hover:text-primary'}`}
           >
             {activeView === 'calendar' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(0,218,243,0.5)]"></div>}
@@ -107,7 +124,7 @@ function App() {
           </button>
           
           <button 
-             onClick={() => setActiveView('stats')}
+             onClick={() => { setActiveView('stats'); setIsSidebarOpen(false); }}
              className={`px-6 py-4 flex items-center gap-4 group transition-all relative ${activeView === 'stats' ? 'text-primary' : 'text-on-surface opacity-60 hover:opacity-100 hover:bg-surface-container hover:text-primary'}`}
           >
             {activeView === 'stats' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(0,218,243,0.5)]"></div>}
@@ -116,7 +133,7 @@ function App() {
           </button>
 
           <button 
-             onClick={() => setActiveView('entrenos')}
+             onClick={() => { setActiveView('entrenos'); setIsSidebarOpen(false); }}
              className={`px-6 py-4 flex items-center gap-4 group transition-all relative ${activeView === 'entrenos' ? 'text-primary' : 'text-on-surface opacity-60 hover:opacity-100 hover:bg-surface-container hover:text-primary'}`}
           >
             {activeView === 'entrenos' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(0,218,243,0.5)]"></div>}
@@ -125,7 +142,7 @@ function App() {
           </button>
 
           <button 
-             onClick={() => setActiveView('settings')}
+             onClick={() => { setActiveView('settings'); setIsSidebarOpen(false); }}
              className={`mt-auto px-6 py-4 flex items-center gap-4 group transition-all relative ${activeView === 'settings' ? 'text-primary' : 'text-on-surface opacity-60 hover:opacity-100 hover:bg-surface-container hover:text-primary'}`}
           >
             {activeView === 'settings' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(0,218,243,0.5)]"></div>}
@@ -141,39 +158,47 @@ function App() {
       </aside>
 
       {/* Main Content Canvas */}
-      <main className="ml-64 min-h-screen relative">
+      <main className="lg:ml-64 min-h-screen relative">
         {/* TopNavBar */}
-        <header className="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 z-40 bg-surface/70 backdrop-blur-md flex justify-between items-center px-8 border-b border-outline-variant/5">
-          <div className="flex items-center gap-4">
-            <span className="font-headline text-[10px] font-black text-on-surface tracking-[0.3em] uppercase opacity-70">
+        <header className="fixed top-0 right-0 w-full lg:w-[calc(100%-16rem)] h-16 z-40 bg-surface/70 backdrop-blur-md flex justify-between items-center px-4 lg:px-8 border-b border-outline-variant/5">
+          <div className="flex items-center gap-2 lg:gap-4">
+            <button 
+              className="lg:hidden p-2 text-on-surface/70 hover:text-primary transition-colors"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <span className="material-symbols-outlined text-2xl">menu</span>
+            </button>
+            <span className="font-headline text-[10px] font-black text-on-surface tracking-[0.3em] uppercase opacity-70 truncate max-w-[120px] lg:max-w-none">
               {activeView === 'calendar' ? 'Performance Dashboard' : activeView.toUpperCase()}
             </span>
-            <div className="h-4 w-[1px] bg-outline-variant/30"></div>
+            <div className="hidden lg:block h-4 w-[1px] bg-outline-variant/30"></div>
             <div className="flex items-center gap-2 px-3 py-1 bg-secondary-container/20 rounded-full border border-secondary/10">
               <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-              <span className="font-label text-[10px] uppercase text-secondary font-bold tracking-tighter">2026 Plan Active</span>
+              <span className="font-label text-[10px] uppercase text-secondary font-bold tracking-tighter">2026 Plan</span>
             </div>
           </div>
-          <div className="flex items-center gap-6">
-            <div className="relative group">
-              <span className="material-symbols-outlined text-on-surface opacity-70 group-hover:text-primary transition-opacity cursor-pointer">notifications</span>
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-tertiary rounded-full shadow-[0_0_8px_rgba(255,182,146,0.5)]"></span>
+          <div className="flex items-center gap-3 lg:gap-6">
+            <div className="hidden sm:flex items-center gap-6">
+              <div className="relative group">
+                <span className="material-symbols-outlined text-on-surface opacity-70 group-hover:text-primary transition-opacity cursor-pointer">notifications</span>
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-tertiary rounded-full shadow-[0_0_8px_rgba(255,182,146,0.5)]"></span>
+              </div>
+              <span className="material-symbols-outlined text-on-surface opacity-70 hover:text-primary transition-opacity cursor-pointer">bolt</span>
             </div>
-            <span className="material-symbols-outlined text-on-surface opacity-70 hover:text-primary transition-opacity cursor-pointer">bolt</span>
             
-            <div className="flex items-center gap-4 pl-4 border-l border-outline-variant/20">
+            <div className="flex items-center gap-2 lg:gap-4 pl-4 border-l border-outline-variant/20">
               {authLoading ? (
-                <div className="w-10 h-10 rounded-full border-2 border-primary/20 animate-spin border-t-primary"></div>
+                <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 border-primary/20 animate-spin border-t-primary"></div>
               ) : user && (
                 <>
-                  <div className="text-right">
+                  <div className="text-right hidden sm:block">
                     <p className="text-xs font-black font-headline leading-tight uppercase tracking-tight">{user.displayName || 'Athlete'}</p>
                     <p className="text-[10px] font-label opacity-40 uppercase tracking-tighter">Pro Elite Athlete</p>
                   </div>
                   {user.photoURL ? (
-                    <img src={user.photoURL} alt="Profile" className="w-10 h-10 rounded-full border-2 border-primary/20 shadow-[0_0_15px_rgba(0,218,243,0.1)]" />
+                    <img src={user.photoURL} alt="Profile" className="w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 border-primary/20 shadow-[0_0_15px_rgba(0,218,243,0.1)]" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/20 font-headline font-black text-primary">
+                    <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/20 font-headline font-black text-primary text-xs">
                       {user.displayName?.substring(0, 2).toUpperCase() || 'AT'}
                     </div>
                   )}
@@ -184,12 +209,12 @@ function App() {
         </header>
 
         {/* Content Body */}
-        <div className="pt-24 px-8 pb-12 max-w-7xl mx-auto">
+        <div className="pt-24 px-4 lg:px-8 pb-12 max-w-7xl mx-auto">
           {activeView === 'calendar' && (
             <div className="animate-in fade-in zoom-in-95 duration-700">
               {/* Hero Section */}
-              <section className="grid grid-cols-12 gap-8 mb-12">
-                <div className="col-span-12 lg:col-span-8 bg-surface-container rounded-xl overflow-hidden relative group min-h-[450px] shadow-2xl border border-outline-variant/10">
+              <section className="grid grid-cols-12 gap-4 lg:gap-8 mb-8 lg:mb-12">
+                <div className="col-span-12 lg:col-span-8 bg-surface-container rounded-xl overflow-hidden relative group min-h-[350px] lg:min-h-[450px] shadow-2xl border border-outline-variant/10">
                   <div className="absolute inset-0 z-0 opacity-40 group-hover:scale-105 transition-transform duration-[20s] linear">
                     <img 
                       alt="Workout Background" 
@@ -198,35 +223,34 @@ function App() {
                     />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent z-10"></div>
-                  <div className="relative z-20 p-12 h-full flex flex-col justify-end">
-                    <div className="flex items-center gap-3 mb-6">
-                      <span className="px-4 py-1.5 bg-primary text-on-primary font-label text-[10px] font-black uppercase tracking-[0.2em] rounded-sm shadow-lg shadow-primary/20">Today's Protocol</span>
-                      <span className="text-on-surface font-label text-[10px] uppercase tracking-[0.2em] opacity-60">High Intensity Threshold</span>
+                  <div className="relative z-20 p-6 lg:p-12 h-full flex flex-col justify-end">
+                    <div className="flex items-center gap-3 mb-4 lg:mb-6">
+                      <span className="px-3 lg:px-4 py-1.5 bg-primary text-on-primary font-label text-[10px] font-black uppercase tracking-[0.2em] rounded-sm shadow-lg shadow-primary/20">Today's Protocol</span>
                     </div>
                     {todayWorkouts.length > 0 ? (
                       <>
-                        <h2 className="text-7xl font-black font-headline tracking-tighter mb-6 leading-none uppercase">
+                        <h2 className="text-4xl lg:text-7xl font-black font-headline tracking-tighter mb-4 lg:mb-6 leading-none uppercase">
                           {todayWorkouts[0].type}: <span className="text-primary">{todayWorkouts[0].km ? todayWorkouts[0].km + 'km' : todayWorkouts[0].title}</span>
                         </h2>
-                        <div className="grid grid-cols-3 gap-10 mt-10 border-t border-outline-variant/20 pt-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-10 mt-6 lg:mt-10 border-t border-outline-variant/20 pt-6 lg:pt-10">
                           <div>
-                            <p className="font-label text-[10px] uppercase tracking-[0.3em] opacity-40 mb-2 font-black text-primary">Technical Specs</p>
-                            <p className="text-sm font-bold font-body leading-relaxed opacity-90">{todayWorkouts[0].detail}</p>
+                            <p className="font-label text-[10px] uppercase tracking-[0.3em] opacity-40 mb-1 lg:mb-2 font-black text-primary">Technical Specs</p>
+                            <p className="text-xs lg:text-sm font-bold font-body leading-relaxed opacity-90">{todayWorkouts[0].detail}</p>
                           </div>
-                          <div>
-                            <p className="font-label text-[10px] uppercase tracking-[0.3em] opacity-40 mb-2 font-black text-primary">Duration</p>
-                            <p className="text-2xl font-black font-headline">{todayWorkouts[0].value} <span className="text-xs opacity-50 font-label">HOURS</span></p>
+                          <div className="flex sm:block justify-between items-center">
+                            <p className="font-label text-[10px] uppercase tracking-[0.3em] opacity-40 mb-1 lg:mb-2 font-black text-primary">Duration</p>
+                            <p className="text-xl lg:text-2xl font-black font-headline">{todayWorkouts[0].value} <span className="text-xs opacity-50 font-label">HOURS</span></p>
                           </div>
-                          <div>
-                            <p className="font-label text-[10px] uppercase tracking-[0.3em] opacity-40 mb-2 font-black text-primary">Performance</p>
-                            <p className={`text-2xl font-black font-headline ${todayWorkouts[0].completed ? 'text-secondary' : 'text-primary'}`}>
+                          <div className="flex sm:block justify-between items-center">
+                            <p className="font-label text-[10px] uppercase tracking-[0.3em] opacity-40 mb-1 lg:mb-2 font-black text-primary">Performance</p>
+                            <p className={`text-xl lg:text-2xl font-black font-headline ${todayWorkouts[0].completed ? 'text-secondary' : 'text-primary'}`}>
                               {todayWorkouts[0].completed ? 'COMPLETED' : 'PENDING'}
                             </p>
                           </div>
                         </div>
                       </>
                     ) : (
-                      <h2 className="text-7xl font-black font-headline tracking-tighter mb-4 leading-none uppercase">
+                      <h2 className="text-4xl lg:text-7xl font-black font-headline tracking-tighter mb-4 leading-none uppercase">
                         Rest & <br/><span className="text-primary">Recovery</span>
                       </h2>
                     )}
@@ -234,27 +258,27 @@ function App() {
                 </div>
 
                 {/* Stats Sidebar */}
-                <div className="col-span-12 lg:col-span-4 flex flex-col gap-8">
-                   <div className="bg-surface-container-low p-10 rounded-xl border border-outline-variant/10 shadow-xl">
-                    <p className="font-label text-[10px] uppercase tracking-[0.3em] opacity-40 mb-8 font-black text-primary">Monthly Volume</p>
+                <div className="col-span-12 lg:col-span-4 flex flex-col gap-4 lg:gap-8">
+                   <div className="bg-surface-container-low p-6 lg:p-10 rounded-xl border border-outline-variant/10 shadow-xl">
+                    <p className="font-label text-[10px] uppercase tracking-[0.3em] opacity-40 mb-6 lg:mb-8 font-black text-primary">Monthly Volume</p>
                     <Stats trainingPlan={trainingPlan} currentMonth={currentMonth} mini />
                   </div>
                   
-                  <div className="bg-surface-container-high p-10 rounded-xl flex-1 flex flex-col justify-between border border-outline-variant/10 shadow-xl relative overflow-hidden group">
+                  <div className="bg-surface-container-high p-6 lg:p-10 rounded-xl flex-1 flex flex-col justify-between border border-outline-variant/10 shadow-xl relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <span className="material-symbols-outlined text-8xl">timer</span>
+                        <span className="material-symbols-outlined text-6xl lg:text-8xl">timer</span>
                     </div>
                     <div>
-                      <span className="material-symbols-outlined text-tertiary mb-6 text-4xl">timer</span>
-                      <h3 className="font-headline font-black text-2xl leading-tight uppercase tracking-tighter">100KM Ultramarathon Preparation</h3>
-                      <p className="font-body text-xs opacity-50 mt-3 font-medium tracking-wide">TARGET DEPLOYMENT: OCT 12, 2026</p>
+                      <span className="material-symbols-outlined text-tertiary mb-4 lg:mb-6 text-3xl lg:text-4xl">timer</span>
+                      <h3 className="font-headline font-black text-xl lg:text-2xl leading-tight uppercase tracking-tighter">100KM Preparation</h3>
+                      <p className="font-body text-[10px] lg:text-xs opacity-50 mt-2 lg:mt-3 font-medium tracking-wide">TARGET: OCT 12, 2026</p>
                     </div>
-                    <div className="mt-12">
-                      <div className="flex justify-between items-baseline mb-3">
-                        <span className="font-label text-[10px] uppercase tracking-[0.2em] font-black opacity-60">Mission Progress</span>
-                        <span className="text-3xl font-black font-headline text-on-surface">62%</span>
+                    <div className="mt-8 lg:mt-12">
+                      <div className="flex justify-between items-baseline mb-2 lg:mb-3">
+                        <span className="font-label text-[10px] uppercase tracking-[0.2em] font-black opacity-60 text-[8px] lg:text-[10px]">Mission Progress</span>
+                        <span className="text-2xl lg:text-3xl font-black font-headline text-on-surface">62%</span>
                       </div>
-                      <div className="h-2 w-full bg-surface-container-lowest rounded-full overflow-hidden shadow-inner">
+                      <div className="h-1.5 lg:h-2 w-full bg-surface-container-lowest rounded-full overflow-hidden shadow-inner">
                         <div className="h-full bg-gradient-to-r from-tertiary to-tertiary-container shadow-[0_0_10px_rgba(255,182,146,0.3)]" style={{ width: '62%' }}></div>
                       </div>
                     </div>
@@ -263,32 +287,34 @@ function App() {
               </section>
 
               {/* Calendar Section */}
-              <section className="grid grid-cols-12 gap-8">
-                <div className="col-span-12 xl:col-span-9">
-                  <Calendar 
-                    currentMonth={currentMonth} 
-                    setCurrentMonth={setCurrentMonth}
-                    trainingPlan={trainingPlan}
-                    selectedDate={selectedDate}
-                    setSelectedDate={setSelectedDate}
-                  />
+              <section className="grid grid-cols-12 gap-4 lg:gap-8">
+                <div className="col-span-12 xl:col-span-9 overflow-x-auto">
+                  <div className="min-w-[800px] xl:min-w-0">
+                    <Calendar 
+                      currentMonth={currentMonth} 
+                      setCurrentMonth={setCurrentMonth}
+                      trainingPlan={trainingPlan}
+                      selectedDate={selectedDate}
+                      setSelectedDate={setSelectedDate}
+                    />
+                  </div>
                 </div>
                 
-                <div className="col-span-12 xl:col-span-3 space-y-8">
-                  <div className="bg-surface-container p-10 rounded-xl relative overflow-hidden border border-outline-variant/10 shadow-xl">
+                <div className="col-span-12 xl:col-span-3 space-y-4 lg:space-y-8">
+                  <div className="bg-surface-container p-6 lg:p-10 rounded-xl relative overflow-hidden border border-outline-variant/10 shadow-xl">
                     <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
-                    <div className="flex flex-col gap-6 relative z-10">
-                      <span className="material-symbols-outlined text-primary text-4xl shadow-glow">smart_toy</span>
+                    <div className="flex flex-col gap-4 lg:gap-6 relative z-10">
+                      <span className="material-symbols-outlined text-primary text-3xl lg:text-4xl shadow-glow">smart_toy</span>
                       <div>
-                        <h4 className="font-headline font-black text-xl leading-tight mb-3 uppercase tracking-tighter">AI Optimization</h4>
-                        <p className="text-xs opacity-50 leading-relaxed mb-6 font-medium">Performance algorithms are dynamically adjusting your 2026 Season Plan based on fatigue markers.</p>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3 text-[10px] font-label uppercase tracking-widest font-bold text-secondary">
-                            <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(136,217,130,0.5)]"></span>
+                        <h4 className="font-headline font-black text-lg lg:text-xl leading-tight mb-2 lg:mb-3 uppercase tracking-tighter">AI Optimization</h4>
+                        <p className="text-[10px] lg:text-xs opacity-50 leading-relaxed mb-4 lg:mb-6 font-medium">Performance algorithms are dynamically adjusting your season plan.</p>
+                        <div className="space-y-2 lg:space-y-3">
+                          <div className="flex items-center gap-3 text-[10px] font-label uppercase tracking-widest font-bold text-secondary text-[8px] lg:text-[10px]">
+                            <span className="w-1.5 lg:w-2 h-1.5 lg:h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(136,217,130,0.5)]"></span>
                             Plan Active
                           </div>
-                          <div className="flex items-center gap-3 text-[10px] font-label uppercase tracking-widest font-bold text-secondary">
-                            <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(136,217,130,0.5)]"></span>
+                          <div className="flex items-center gap-3 text-[10px] font-label uppercase tracking-widest font-bold text-secondary text-[8px] lg:text-[10px]">
+                            <span className="w-1.5 lg:w-2 h-1.5 lg:h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(136,217,130,0.5)]"></span>
                             Cloud Synced
                           </div>
                         </div>
