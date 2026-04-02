@@ -63,7 +63,7 @@ const Calendar: React.FC<CalendarProps> = ({
       <div className="flex justify-between items-center mb-8">
         <div>
           <h3 className="text-2xl font-black font-headline tracking-tighter uppercase">{months[month]} {year}</h3>
-          <p className="font-label text-[10px] uppercase opacity-50 tracking-widest mt-1">Foundation Block Phase 2</p>
+          <p className="font-label text-[10px] uppercase opacity-50 tracking-widest mt-1">Plan Personalizado</p>
         </div>
         <div className="flex gap-2">
           <button onClick={prevMonth} className="p-2 rounded-full border border-outline-variant/20 hover:bg-surface-container-high transition-colors">

@@ -1,39 +1,46 @@
-import type { TrainingPlan, Workout } from '../types.ts';
-
-export const templates = {
-    gym: { type: "Gimnasio", title: "Fuerza + Prehab", detail: "3x12: Sentadilla Búlgara, Monster Walk, Clamshells, Peso Muerto, Plancha.", value: 1.5 },
-    swim: { type: "Natación", title: "Técnica y Fluidez", detail: "8x25m Punto Muerto + 6x50m. Foco en respiración.", value: 0.6, km: 0.8 },
-    bikeMid: { type: "Bici", title: "Intervalos Estática", detail: "10' cal + 5x(3' fuerte/2' suave) + 10' suave.", value: 0.8, km: 15 },
-    bikeLong: { type: "Bici", title: "Salida Larga", detail: "Ritmo conversación. Acostumbrarse al sillín.", value: 2, km: 45 },
-    runShort: { type: "Carrera", title: "Rodaje Muy Suave", detail: "4 km suaves. Recuperación activa.", value: 0.5, km: 4 },
-    runLong: { type: "Carrera", title: "Tirada Larga", detail: "Máximo 7 km. Ni un metro más.", value: 1, km: 7 }
-};
+import type { TrainingPlan } from '../types.ts';
 
 export function generatePlan(): TrainingPlan {
     const plan: TrainingPlan = {};
-    const startDate = new Date(2026, 0, 1);
-    const endDate = new Date(2027, 0, 1);
-    
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split('T')[0];
-        const day = d.getDay();
+    const startDate = new Date('2026-04-13');
+    const endDate = new Date('2026-07-17'); // Final de las clases según la imagen
+
+    const subjects = [
+        { day: 1, title: 'MA2 V: Mathematik 2', time: '12:00 - 14:00', type: 'Uni' },
+        { day: 2, title: 'ALD V: Algorithmen', time: '12:00 - 15:00', type: 'Uni' },
+        { day: 2, title: 'BSY V: Betriebssysteme', time: '15:00 - 17:00', type: 'Uni' },
+        { day: 3, title: 'MA2 Ü: Mathematik 2', time: '08:00 - 10:00', type: 'Uni' },
+        { day: 3, title: 'MA2 V: Mathematik 2', time: '12:00 - 14:00', type: 'Uni' },
+        { day: 3, title: 'PE2 V: Programmentwicklung 2', time: '14:00 - 17:00', type: 'Uni' },
+        { day: 4, title: 'PE2 Ü: Programmentwicklung 2', time: '08:00 - 10:00', type: 'Uni' },
+        { day: 4, title: 'BSY Ü: Betriebssysteme', time: '10:15 - 11:45', type: 'Uni' },
+        { day: 4, title: 'DR2 P/Ü: Digitaltechnik', time: '14:00 - 15:30', type: 'Uni' },
+        { day: 4, title: 'ALD Ü: Algorithmen', time: '16:00 - 18:00', type: 'Uni' },
+        { day: 5, title: 'DR2 V: Digitaltechnik', time: '08:15 - 10:30', type: 'Uni' }
+    ];
+
+    let current = new Date(startDate);
+    while (current <= endDate) {
+        const dayOfWeek = current.getDay(); // 0(Sun) - 6(Sat)
+        // Convert to 1(Mon) - 7(Sun) for easier matching with our list
+        const adjustedDay = dayOfWeek === 0 ? 7 : dayOfWeek;
+
+        const daySubjects = subjects.filter(s => s.day === adjustedDay);
         
-        let dailyWorkouts: any[] = [];
-        if (day === 1) dailyWorkouts = [templates.gym];
-        if (day === 2) dailyWorkouts = [templates.swim];
-        if (day === 3) dailyWorkouts = [templates.bikeMid];
-        if (day === 4) dailyWorkouts = [templates.gym, templates.runShort];
-        if (day === 5) dailyWorkouts = [templates.swim];
-        if (day === 6) dailyWorkouts = [templates.bikeLong];
-        if (day === 0) dailyWorkouts = [templates.runLong];
-        
-        if (dailyWorkouts.length > 0) {
-            plan[dateStr] = dailyWorkouts.map(w => ({
-                ...w, 
-                id: Math.random().toString(36).substr(2, 9),
+        if (daySubjects.length > 0) {
+            const dateStr = current.toISOString().split('T')[0];
+            plan[dateStr] = daySubjects.map((s, idx) => ({
+                id: `uni-${dateStr}-${idx}`,
+                type: s.type,
+                title: s.title,
+                detail: `Horario: ${s.time}`,
+                value: 2, // Default value for stats
                 completed: false
             }));
         }
+
+        current.setDate(current.getDate() + 1);
     }
+
     return plan;
 }
