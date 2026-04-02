@@ -164,7 +164,7 @@ function App() {
             <div className="flex items-center gap-4 pl-4 border-l border-outline-variant/20">
               {authLoading ? (
                 <div className="w-10 h-10 rounded-full border-2 border-primary/20 animate-spin border-t-primary"></div>
-              ) : user ? (
+              ) : user && (
                 <>
                   <div className="text-right">
                     <p className="text-xs font-black font-headline leading-tight uppercase tracking-tight">{user.displayName || 'Athlete'}</p>
@@ -178,13 +178,6 @@ function App() {
                     </div>
                   )}
                 </>
-              ) : (
-                <button 
-                  onClick={login}
-                  className="bg-surface-container hover:bg-surface-container-high px-4 py-2 rounded-full font-label text-[10px] font-black uppercase tracking-widest transition-all border border-outline-variant/10"
-                >
-                  Sign In
-                </button>
               )}
             </div>
           </div>
@@ -332,7 +325,7 @@ function App() {
 
           {activeView === 'settings' && (
             <div className="animate-in fade-in duration-700">
-                <Settings />
+                <Settings trainingPlan={trainingPlan} setTrainingPlan={setTrainingPlan} />
             </div>
           )}
         </div>

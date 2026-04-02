@@ -1,12 +1,45 @@
 import React from 'react';
-import { getStravaAuthUrl } from '../services/strava.ts';
+import type { TrainingPlan } from '../types.ts';
+import { generatePlan } from '../utils/planGenerator.ts';
+import { saveUserPlan } from '../services/firestore.ts';
 import { useApp } from '../context/AppContext.tsx';
+import { getStravaAuthUrl } from '../services/strava.ts';
 
-const Settings: React.FC = () => {
+interface SettingsProps {
+  trainingPlan: TrainingPlan;
+  setTrainingPlan: React.Dispatch<React.SetStateAction<TrainingPlan>>;
+}
+
+const Settings: React.FC<SettingsProps> = ({ trainingPlan, setTrainingPlan }) => {
   const { user, login, logout, settings, updateSettings } = useApp();
 
   const handleConnectStrava = () => {
     window.location.href = getStravaAuthUrl();
+  };
+
+  const handleInjectUniSchedule = async () => {
+    const uniPlan = generatePlan();
+    const newPlan = { ...trainingPlan };
+    
+    Object.keys(uniPlan).forEach(date => {
+      if (!newPlan[date]) {
+        newPlan[date] = uniPlan[date];
+      } else {
+        const nonUniWorkouts = newPlan[date].filter(w => w.type !== 'Uni');
+        newPlan[date] = [...nonUniWorkouts, ...uniPlan[date]];
+      }
+    });
+
+    setTrainingPlan(newPlan);
+    
+    const userId = user?.uid || "anonymous_user";
+    try {
+      localStorage.setItem(`ironPlan_${userId}`, JSON.stringify(newPlan));
+      await saveUserPlan(newPlan, userId);
+      alert('Horario Universitario sincronizado con éxito.');
+    } catch (err) {
+      console.error('Error saving plan:', err);
+    }
   };
 
   return (
@@ -20,24 +53,9 @@ const Settings: React.FC = () => {
           </div>
         )}
         <div className="user-info flex-1">
-          <h3 className="font-headline font-black text-3xl tracking-tighter uppercase">{user?.displayName || 'Atleta No Identificado'}</h3>
+          <h3 className="font-headline font-black text-3xl tracking-tighter uppercase">{user?.displayName || 'Athlete'}</h3>
           <p className="font-label text-xs opacity-50 uppercase tracking-[0.2em] mt-1 text-primary">Pro Elite Performance Plan</p>
         </div>
-        {user ? (
-          <button 
-            onClick={logout}
-            className="px-6 py-2 bg-error-container/10 text-error border border-error/30 rounded-full font-label text-[10px] font-black uppercase tracking-widest hover:bg-error hover:text-on-error transition-all"
-          >
-            Sign Out
-          </button>
-        ) : (
-          <button 
-            onClick={login}
-            className="px-8 py-3 bg-primary text-on-primary rounded-full font-label text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20"
-          >
-            Sign In with Google
-          </button>
-        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -107,7 +125,7 @@ const Settings: React.FC = () => {
               </div>
               <span className="font-label text-[10px] uppercase font-black text-secondary bg-secondary/10 px-3 py-1 rounded">Pro Elite</span>
             </div>
-            <div className="flex justify-between items-center p-8 hover:bg-surface-container-high transition-colors">
+            <div className="flex justify-between items-center p-8 border-b border-outline-variant/10 hover:bg-surface-container-high transition-colors">
               <div>
                 <span className="font-headline font-bold text-sm block">Strava Connection</span>
                 <p className="text-[10px] font-body opacity-40 uppercase mt-1">Cloud performance data</p>
@@ -119,17 +137,21 @@ const Settings: React.FC = () => {
                 Connect Strava
               </button>
             </div>
+
+            <div className="flex justify-between items-center p-8 hover:bg-surface-container-high transition-colors">
+              <div>
+                <span className="font-headline font-bold text-sm block">Universidad</span>
+                <p className="text-[10px] font-body opacity-40 uppercase mt-1">Horario Lectivo Abr - Jul</p>
+              </div>
+              <button 
+                onClick={handleInjectUniSchedule}
+                className="font-label text-[10px] uppercase font-black text-secondary hover:bg-secondary hover:text-on-secondary border border-secondary/30 px-4 py-2 rounded-full transition-all"
+              >
+                Sincronizar Universidad
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="pt-12 border-t border-outline-variant/20 flex justify-end">
-        <button 
-          onClick={logout}
-          className="px-10 py-5 bg-error-container/10 text-error border border-error/30 rounded-full font-label text-[10px] font-black uppercase tracking-[0.2em] hover:bg-error hover:text-on-error transition-all shadow-lg hover:shadow-error/20"
-        >
-          Terminate Session
-        </button>
       </div>
     </div>
   );
