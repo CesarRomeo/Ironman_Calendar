@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import type { TrainingPlan } from '../types.ts';
+import { normalizeActivityType } from '../utils/activityUtils.ts';
 
 interface StatsProps {
   trainingPlan: TrainingPlan;
@@ -21,9 +22,11 @@ const Stats: React.FC<StatsProps> = ({ trainingPlan, currentMonth, mini = false 
           if (w.completed) {
             totals.completedWorkouts++;
             totals.time += (w.value || 0);
-            if (w.type === "Natación") totals.swim += (w.km || 0);
-            if (w.type === "Bici") totals.bike += (w.km || 0);
-            if (w.type === "Carrera") totals.run += (w.km || 0);
+            
+            const type = normalizeActivityType(w.type);
+            if (type === "swim") totals.swim += (w.km || 0);
+            if (type === "bike") totals.bike += (w.km || 0);
+            if (type === "run") totals.run += (w.km || 0);
           }
         });
       }
